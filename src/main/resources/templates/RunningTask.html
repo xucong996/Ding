@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>RunningTask</title>
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/demo/demo.css">
+	<script type="text/javascript" src="/js/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/easyui/jquery.easyui.min.js"></script>
+</head>
+<body>
+
+		<div style="margin:20px 0;"></div>
+		<table id="rt2" class="easyui-datagrid" title="Running Task" style="width:700px;height:250px"
+				data-options="singleSelect:true,collapsible:true,method:'get'">
+			<thead>
+				<tr>
+					<th data-options="field:'page',width:100">page</th>
+					<th data-options="field:'time',width:150">time</th>
+					<th data-options="field:'cpName',width:150">cpName</th>
+					<th data-options="field:'status',width:80">status</th>
+				</tr>
+			</thead>
+		</table>
+		
+		<script type="text/javascript">
+		
+		window.onload = function(){
+			
+			var hostname = "" + window.location.hostname;
+			var port = "" + window.location.port;
+			
+			$('#rt2').datagrid({
+				url : "http://" + hostname+ ":" + port + "/RunningTaskList"
+			});
+		}
+		</script>
+</body>
+</html>

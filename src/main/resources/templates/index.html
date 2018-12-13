@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Basic Accordion - jQuery EasyUI Demo</title>
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/demo/demo.css">
+	<script type="text/javascript" src="/js/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/easyui/jquery.easyui.min.js"></script>
+</head>
+<body>
+	<h2>截图发送平台</h2>
+	<div style="margin:20px 0 10px 0;"></div>
+	<div class="easyui-accordion" style="width:500px;height:600px;">
+		
+		<div title="发送中心" data-options="iconCls:'icon-help'" style="padding:10px;">
+			
+			 <div style="margin-bottom:20px">
+					<div>Company Name</div>
+					<input id="cn" name="dept1" data-options="prompt:'Enter a company name...'">
+			</div>
+			
+			<div style="margin-bottom:20px">
+					<div>Sending Page</div>
+					<input id="ad" name="dept2" data-options="prompt:'Enter a page name...'">
+			</div>
+			
+			
+			<div style="margin-bottom:20px">
+				<div>Send Time:</div>
+				<input id="tt" class="easyui-timespinner" style="width:120px;" required="required" data-options="min:'08:30',showSeconds:true">
+			</div>
+		
+			<div>
+				<button onclick="immediately()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">立即发送</button>
+				<button onclick="timming()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">定时发送</button><br/>
+				<button onclick="addGroupSend()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">加入群发</button>
+				<button onclick="gourpSending()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">开始群发</button><br/>
+				<button onclick="closeAll()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">关闭所有定时发送</button>
+			</div>	
+			
+		</div>
+		
+		
+		<div title="注册中心" data-options="iconCls:'icon-ok'" style="overflow:auto;padding:10px;">
+			<div style="margin-bottom:20px">
+				<div>Company Name:</div>
+				<input id="company" type="text" class="easyui-textbox" data-options="prompt:'Enter a company name...'" style="width:100%;height:32px">
+			</div>
+			
+			<div style="margin-bottom:20px">
+				<div>DingDing Robe Id:</div>
+				<input id="robeId" type="text" class="easyui-textbox" style="width:100%;height:32px">
+			</div>
+		
+			<div>
+				<button onclick="register()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">Register</button>
+				<button onclick="cancellation()" class="easyui-linkbutton" iconCls="icon-no" style="width:100%;height:32px">Cancellation</button> 
+			</div>
+			
+		</div>
+		
+		
+		<div title="暂时无用" data-options="iconCls:'icon-search'" style="padding:10px;">
+			<ul class="easyui-tree">
+				<li>
+					<span>Foods</span>
+					<ul>
+						<li>
+							<span>Fruits</span>
+							<ul>
+								<li>apple</li>
+								<li>orange</li>
+							</ul>
+						</li>
+						<li>
+							<span>Vegetables</span>
+							<ul>
+								<li>tomato</li>
+								<li>carrot</li>
+								<li>cabbage</li>
+								<li>potato</li>
+								<li>lettuce</li>
+							</ul>
+						</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<script type="text/javascript">
+		window.onload = function(){
+			alert("瞬间加载页面！")
+			loadcp();
+			loadpage();
+			
+			
+		}
+		
+		
+		var ad = document.getElementById('ad');
+		var cn = document.getElementById('cn');
+		var hostname = "" + window.location.hostname;
+		var port = "" + window.location.port;
+		var urlPrefix = 'http://'+hostname+':'+port;
+		
+		function immediately(){
+			
+			/* var address = document.getElementById('ad').children[ad.selectedIndex].innerHTML; */
+			var address = $('#ad').combobox('getText');
+			var companyName =$('#cn').combobox('getText');
+			var url = urlPrefix+'/send';
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "flag="+ address + "&robeName="+companyName,
+				success: function(msg){
+					alert("Data Saved:" + msg)
+				} 
+			})
+		}
+		
+		function timming(){
+			var address = $('#ad').combobox('getText');
+			var companyName =$('#cn').combobox('getText');
+			/* var time = document.getElementById('tt').value; */
+			var time =$('#tt').combobox('getText');
+			var url = urlPrefix+'/auto';
+			
+			alert(time)
+			var st = "" + time
+			if(time == ""){
+				alert("请输入时间！")
+				return ;
+			}
+			
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "flag="+ address + "&robeName="+companyName + "&time="+time,
+				success: function(msg){
+					alert("Data Saved:" + msg)
+					alert(time);
+				} 
+			})
+		}
+		
+		//公司名字对应机器人ip
+		function loadcp(){
+			
+			
+			/* $.ajax({
+				url: "http://localhost:8081/cpRobeList",
+				type: "get",
+				success: function(msg){
+					alert(msg)
+					var select = $("#cn");
+					for(var i = 0; i < msg.length; i++){
+						select.append("<option>"+msg[i].company+"</option>");	
+					} 
+					
+				} 
+			}) */
+			
+			var url = urlPrefix+'/cpRobeList';
+			$('#cn').combobox({
+			    url:url,
+			    valueField:'id',
+			    textField:'name'
+			});
+		}
+		function loadpage(){
+			alert("进入loadpage()")
+			/* $.ajax({
+				url: "http://localhost:8081/pageList",
+				type: "get",
+				success: function(msg){
+					var select = $("#ad");
+					for(var i = 0; i < msg.length; i++){
+						select.append("<option>"+msg[i].page+"</option>");	
+					}
+					
+				} 
+			}) */
+			var url = urlPrefix+'/pageList';
+			$('#ad').combobox({
+			    url:url,
+			    valueField:'id',
+			    textField:'name'
+			});
+		}
+		
+		function register(){
+			var company = document.getElementById("company").value;
+			var robeId = document.getElementById("robeId").value;
+			var url = urlPrefix+'/register';
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "company=" + company + "&robeId="+robeId,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		function cancellation(){
+			var company = document.getElementById("company").value;
+			var robeId = document.getElementById("robeId").value;
+			var url = urlPrefix+'/cancellation';
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "company=" + company,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		
+		function addGroupSend(){
+			var address = $('#ad').combobox('getText');
+			var companyName =$('#cn').combobox('getText');
+			var url = urlPrefix+'/addGroupSend';
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "company="+companyName+"&page="+address,
+				success: function(msg){
+					alert(msg)
+				} 
+			})
+		}
+		
+		function gourpSending(){
+			
+			var time =$('#tt').combobox('getText');
+			var url = urlPrefix+'/GroupSending';
+			$.ajax({
+				url: url,
+				type: "post",
+				data: "time="+time,
+				success: function(msg){
+					alert(msg)
+				} 
+			})
+		}
+		
+		function closeAll(){
+			
+			var url = urlPrefix+'/close';
+			$.ajax({
+				url: url,
+				type: "get",
+				success: function(msg){
+					alert(msg)
+				} 
+			})
+		}
+	</script>
+</body>
+</html>

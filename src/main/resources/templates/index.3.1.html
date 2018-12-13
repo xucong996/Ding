@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>截图发送到钉钉</title>
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/default/easyui.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/themes/icon.css">
+	<link rel="stylesheet" type="text/css" href="/js/easyui/demo/demo.css">
+	<script type="text/javascript" src="/js/easyui/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/easyui/jquery.easyui.min.js"></script>
+</head>
+<body>
+	<div style="margin:20px 0;"></div>
+		
+		
+		<div id="tb" style="height:auto">
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="append()">Append</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-remove',plain:true" onclick="removeit()">Remove</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-save',plain:true" onclick="accept()">Accept</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-undo',plain:true" onclick="reject()">Reject</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-search',plain:true" onclick="getChanges()">GetChanges</a><br/>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="test()">Test</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="send()">Send</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" data-options="iconCls:'icon-add',plain:true" onclick="aa()">Stop</a>
+			<a href="javascript:void(0)" class="easyui-linkbutton" onclick="setting()">Setting</a>
+		</div>
+		<table id="dg" title="任务列表" class="easyui-datagrid" style="width:600px;height:600px"
+			data-options="
+				iconCls: 'icon-edit',
+				rownumbers:true,
+				singleSelect: false,
+				toolbar: '#tb',
+				
+				method: 'get',
+				onClickCell: onClickRow,
+				onDblClickCell : onDblClickCell
+				
+			">
+				<!-- onClickCell: onClickRow,onDblClickCell : onDblClickCell  -->
+			<thead>
+				<tr>
+					<th field="ck" checkbox="true"></th>
+					<th id="p" field="page" width="80",
+						formatter:function(value,row){
+								return row.name;
+						},
+						editor="{type:'combobox',
+								 options:{
+									textField:'name',
+									valueField:'id',
+									method:'get',
+									url:'http://'+hostname+':'+port+'/pageList',
+									required:true
+								 }
+							}">Page</th>
+					<th field="time" width="80" editor="timespinner">time</th>
+					<th field="cpName" width="300" align="right" 
+						>companyName</th>
+					<th field="status" width="80" align="right" >status</th>
+					
+				</tr>
+			</thead>
+		</table>
+	<div id="dlg" class="easyui-dialog" title="Toolbar and Buttons" style="width:400px;height:500px;padding:10px"
+			data-options="
+				closed: true,
+				buttons: [{
+					text:'Ok',
+					iconCls:'icon-ok',
+					handler:function(){
+						alert('ok');
+						var ids = '';
+						var inrows = $('#changetb').datagrid('getSelections');
+						for(var i=0; i<inrows.length; i++){
+							ids = ids+','+inrows[i].company;
+						}
+						ids = ids.substr(1);
+						var exrows = $('#dg').datagrid('getSelections');
+						for(var i=0; i<exrows.length; i++){
+						
+							eIndex = $('#dg').datagrid('getRowIndex', exrows[i]) 
+							$('#dg').datagrid('beginEdit',eIndex);
+							exrows[i]['cpName']=ids;
+							$('#dg').datagrid('endEdit', eIndex);
+							
+						}
+						<!-- $('#dlg').dialog('close'); -->
+						
+					}	
+				},{
+					text:'Cancel',
+					handler:function(){
+						$('#dlg').dialog('close');
+					}
+				}]
+			">
+			
+			<table id="changetb" class="easyui-datagrid" title="CheckBox Selection on DataGrid" style="width:600px;height:800px"
+						data-options="rownumbers:true,singleSelect:false,method:'get'">
+				<thead>
+					<tr>
+						<th data-options="field:'ck',checkbox:true"></th>
+						<th data-options="field:'company',width:150">company</th>
+						<th data-options="field:'robeId',width:300">robeId</th>
+						
+					</tr>
+				</thead>
+			</table>
+			
+	</div>
+	<div class="easyui-accordion" style="width:500px;height:350px;">
+		<div title="钉钉机器人注册中心" data-options="iconCls:'icon-ok'" style="overflow:auto;padding:10px;">
+				<div style="margin-bottom:20px">
+					<div>Company Name:</div>
+					<input id="company" type="text" class="easyui-textbox" data-options="prompt:'Enter a company name...'" style="width:100%;height:32px">
+				</div>
+				
+				<div style="margin-bottom:20px">
+					<div>DingDing Robe Id:</div>
+					<input id="robeId" type="text" class="easyui-textbox" style="width:100%;height:32px">
+				</div>
+			
+				<div>
+					<button onclick="companyRegister()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">Register</button>
+					<button onclick="companyCancellation()" class="easyui-linkbutton" iconCls="icon-no" style="width:100%;height:32px">Cancellation</button> 
+				</div>
+		</div>
+		<div title="网页注册中心" data-options="iconCls:'icon-ok'" style="overflow:auto;padding:10px;">
+				<div style="margin-bottom:20px">
+					<div>Page Name:</div>
+					<input id="pageName" type="text" class="easyui-textbox" data-options="prompt:'Enter a page name...'" style="width:100%;height:32px">
+				</div>
+				
+				<div style="margin-bottom:20px">
+					<div>Page URL:</div>
+					<input id="pageURL" type="text" class="easyui-textbox" style="width:100%;height:32px">
+				</div>
+				
+				<div>
+					<button onclick="pageRegister()" class="easyui-linkbutton" iconCls="icon-ok" style="width:100%;height:32px">Register</button>
+					<button onclick="pageCancellation()" class="easyui-linkbutton" iconCls="icon-no" style="width:100%;height:32px">Cancellation</button> 
+				</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+		
+		window.onload = function(){
+			
+			$('#dg').datagrid({
+				url : "http://" + hostname+ ":" + port + "/getAll"
+			});
+			
+			$('#changetb').datagrid({
+				url : "http://" + hostname+ ":" + port + "/robeList"
+			});
+			
+			$('#dlg').panel('resize',{
+				width: 400,
+				height: 600,
+				left:400,
+				top:200
+			});
+			
+		}
+		
+		
+		
+		
+		var editIndex = undefined;
+		var hostname = "" + window.location.hostname;
+		var port = "" + window.location.port;
+		var urlPrefix = 'http://'+hostname+':'+port+'/';
+		
+		function endEditing(){
+			if (editIndex == undefined){return true}
+			if ($('#dg').datagrid('validateRow', editIndex)){
+				var ed = $('#dg').datagrid('getEditor', {index:editIndex,field:'page'});
+				var pagename = $(ed.target).combobox('getText');
+				$('#dg').datagrid('getRows')[editIndex]['name'] = pagename;
+				$('#dg').datagrid('endEdit', editIndex);
+				editIndex = undefined;
+				return true;
+			} else {
+				return false;
+			}
+		}
+		
+		function onClickRow(index){
+			endEditing();
+			<!-- if (editIndex != index){ -->
+				<!-- if (endEditing()){ -->
+					<!-- $('#dg').datagrid('selectRow', index) -->
+							<!-- .datagrid('beginEdit', index); -->
+					<!-- editIndex = index; -->
+				<!-- } else { -->
+					<!-- $('#dg').datagrid('selectRow', editIndex); -->
+				<!-- } -->
+			<!-- } -->
+		}
+		
+		function onDblClickCell(index){
+			if (editIndex != index){
+				if (endEditing()){
+					if($('#dg').datagrid('getRows')[index]['status'] == '运行'){
+						alert('任务正在运行中，请关闭后在进行编辑!');
+						return ;
+					}
+					
+					$('#dg').datagrid('selectRow', index)
+							.datagrid('beginEdit', index);
+					editIndex = index;
+				} else {
+					$('#dg').datagrid('selectRow', editIndex);
+				}
+			}
+			
+			
+		}
+		function setting(){
+			endEditing();
+			
+			if($('#dlg').dialog('options')["closed"] == true){
+				$('#dlg').dialog('open')
+			}else{
+				$('#dlg').dialog('close')
+			}
+		}
+		function append(){
+			if (endEditing()){
+				$('#dg').datagrid('appendRow',{itemId:$('#dg').datagrid('getRows').length});
+				editIndex = $('#dg').datagrid('getRows').length-1;
+				$('#dg').datagrid('selectRow', editIndex)
+						.datagrid('beginEdit', editIndex);
+			}
+		}
+		
+		
+		function removeit(){
+			<!-- var ids = []; -->
+			var rows = $('#dg').datagrid('getSelections');
+			<!-- for(var i=0; i<rows.length; i++){ -->
+				<!-- ids.push(rows[i].pageName+rows[i].time); -->
+			<!-- } -->
+			for(var i=rows.length-1; i>-1; i--){
+				editIndex = $('#dg').datagrid('getRowIndex', rows[i]) 
+				$('#dg').datagrid('cancelEdit', editIndex) 
+					.datagrid('deleteRow', editIndex); 
+			}
+			editIndex = undefined;
+		}
+		
+		function test(){
+			var ids = [];
+			var rows = $('#dg').datagrid('getSelections');
+			for(var i=0; i<rows.length; i++){
+				eIndex = $('#dg').datagrid('getRowIndex', rows[i]) 
+				if(rows[i].page==""||rows[i].cpName==null){
+					alert('不能有字段为空，请检查后再保存发送！')
+					continue;
+				} 
+				var obj = {
+						
+						page : rows[i].page,
+						cpName : rows[i].cpName
+						
+					};
+				
+				ids.push(obj);
+			}
+			
+			var task = JSON.stringify(ids);
+			accept()
+			$.ajax({
+				url: urlPrefix + "test_day",
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + localStorage.getItem('token')
+				},
+				type: "post",
+				data: task,
+				beforeSend: function () {
+					var win = $.messager.progress({
+						title:'Please waiting a second',
+						msg:'Test Seading data...'
+					});
+			    },
+			    complete: function () {
+			    	 $.messager.progress('close');
+			    },
+				success: function(msg){
+					alert(msg)
+				} 
+			})
+		}
+		
+		function send(){
+			var ids = [];
+			var rows = $('#dg').datagrid('getSelections');
+			for(var i=0; i<rows.length; i++){
+				eIndex = $('#dg').datagrid('getRowIndex', rows[i]) 
+				
+				if(rows[i]['status'] == '运行'){
+					alert('选择的项目中已处于运行状态，请关闭后再运行！')
+					continue ;
+				}
+				if(rows[i].page==""||rows[i].time==""||rows[i].cpName==null){
+					alert('不能有字段为空，请检查后再保存发送！')
+					continue;
+				} 
+				
+				$('#dg').datagrid('beginEdit',eIndex);
+				rows[i]['status']='运行';
+				$('#dg').datagrid('endEdit', eIndex);
+				
+				
+				var obj = {
+						page : rows[i].page,
+						time : rows[i].time,
+						cpName : rows[i].cpName,
+						status : rows[i].status
+					};
+				
+				ids.push(obj);
+			}
+			var task = JSON.stringify(ids);
+			accept()
+			$.ajax({
+				url: urlPrefix + "send_day",
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + localStorage.getItem('token')
+				},
+				type: "post",
+				data: task,
+				success: function(msg){
+					alert("Data Saved:" + msg)
+				} 
+			})
+			
+		}
+		
+		function accept(){
+			if (endEditing()){
+				$('#dg').datagrid('acceptChanges');
+			}
+			var rows = $('#dg').datagrid('getRows')
+			var ids = []
+			for(var i=0; i<rows.length; i++){
+					
+					var obj = {
+						page : rows[i].page,
+						time : rows[i].time,
+						cpName : rows[i].cpName,
+						status : rows[i].status
+					};
+					ids.push(obj);
+			}
+			var task = JSON.stringify(ids);
+			$.ajax({
+				url: urlPrefix+"accept",
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + localStorage.getItem('token')
+				},
+				type: "post",
+				data: task,
+				success: function(msg){
+					alert("Data Saved:" + msg)
+				} 
+			})
+			
+		}
+		function reject(){
+			$('#dg').datagrid('rejectChanges');
+			editIndex = undefined;
+		}
+		
+		function getChanges(){
+			var rows = $('#dg').datagrid('getChanges');
+			alert(rows.length+' rows are changed!');
+		}
+		
+		function selectClose(){
+			var rows = $('#dg').datagrid('getSelections')
+			for(var i=0; i<rows.length; i++){
+				eIndex = $('#dg').datagrid('getRowIndex', rows[i]) 
+				$('#dg').datagrid('beginEdit',eIndex);
+				rows[i]['status']='结束';
+				$('#dg').datagrid('endEdit', eIndex);
+			}
+			
+			var url = urlPrefix+'/close';
+			alert(url)
+			$.ajax({
+				url: urlPrefix='close',
+				type: "get",
+				success: function(msg){
+					alert(msg)
+				} 
+			})
+		}
+		
+		function aa(){
+			var ids = [];
+			var rows = $('#dg').datagrid('getSelections');
+			for(var i=0; i<rows.length; i++){
+				eIndex = $('#dg').datagrid('getRowIndex', rows[i]) 
+				
+				var obj = {
+						
+						page : rows[i].page,
+						time : rows[i].time,
+						cpName : rows[i].cpName,
+						status : rows[i].status
+					};
+				ids.push(obj);
+				$('#dg').datagrid('beginEdit',eIndex);
+				rows[i]['status']='未运行';
+				$('#dg').datagrid('endEdit', eIndex);
+				
+			}
+			accept();
+			var task = JSON.stringify(ids);
+			$.ajax({
+				url: urlPrefix + "close",
+				headers: {
+					'Accept': 'application/json',
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + localStorage.getItem('token')
+				},
+				type: "post",
+				data: task,
+				success: function(msg){
+					alert("Data Saved:" + msg)
+				} 
+			})
+		}
+		
+		
+		
+		
+		
+		
+		function companyRegister(){
+			var company = document.getElementById("company").value;
+			var robeId = document.getElementById("robeId").value;
+			alert(company + robeId)
+			var url = urlPrefix+'/register';
+			$.ajax({
+				url: urlPrefix + "companyRegister",
+				type: "post",
+				data: "company=" + company + "&robeId="+robeId,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		function companyCancellation(){
+			var company = document.getElementById("company").value;
+			var url = urlPrefix+'/cancellation';
+			$.ajax({
+				url: urlPrefix+"companyCancellation",
+				type: "post",
+				data: "company=" + company,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		function pageRegister(){
+			var pageName = document.getElementById("pageName").value;
+			var pageURL = document.getElementById("pageURL").value;
+			var url = urlPrefix+'/register';
+			$.ajax({
+				url: urlPrefix+"pageRegister",
+				type: "post",
+				data: "page=" + pageName + "&url="+pageURL,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		function pageCancellation(){
+			var pageName = document.getElementById("pageName").value;
+			var url = urlPrefix+'/cancellation';
+			$.ajax({
+				url: urlPrefix+"pageCancellation",
+				type: "post",
+				data: "page=" + pageName,
+				success: function(msg){
+					alert(msg);
+				} 
+			})
+		}
+		
+	</script>
+</body>
+</html>
